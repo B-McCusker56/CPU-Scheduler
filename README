@@ -1,2 +1,9 @@
-README
-
+CPU Scheduling Simulator
+---------------------------------
+Armend Murtishi <murtia2@rpi.edu>
+Brandon McCusker <mccusb@rpi.edu>
+---------------------------------
+This is an assignment for CSCI 4-
+210 Operating Systems which simu-
+lates  different  CPU  scheduling
+algorithms.
