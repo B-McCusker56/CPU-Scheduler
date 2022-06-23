@@ -44,8 +44,8 @@ int deque_push_front(struct deque* q, void* data)
     node->data = data;
     node->prev = q->dummy;
     node->next = q->dummy->next;
-    q->dummy->next = node;
     node->next->prev = node;
+    q->dummy->next = node;
     return ++q->size;
 }
 
@@ -57,8 +57,8 @@ int deque_push_back(struct deque* q, void* data)
     if(!node)
         return 0;
     node->data = data;
-    node->next = q->dummy;
     node->prev = q->dummy->prev;
+    node->next = q->dummy;
     q->dummy->prev = node;
     node->prev->next = node;
     return ++q->size;
