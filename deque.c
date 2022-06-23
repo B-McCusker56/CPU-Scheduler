@@ -1,3 +1,5 @@
+/* Simple deque implementation using a doubly linked list. */
+
 #include <stdlib.h>
 #include "deque.h"
 

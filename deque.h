@@ -1,3 +1,5 @@
+/* Simple deque implementation using a doubly linked list. */
+
 #ifndef DEQUE_H
 #define DEQUE_H
 
