@@ -107,7 +107,5 @@ void* deque_pop_back(struct deque* q)
 
 int deque_size(struct deque* q)
 {
-    if(!q)
-        return -1;
-    return q->size;
+    return q ? q->size : -1;
 }
