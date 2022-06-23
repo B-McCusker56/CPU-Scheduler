@@ -1,17 +1,17 @@
 #ifndef DEQUE_H
 #define DEQUE_H
 
-struct deque
-{
-    int size;
-    struct deque_node* dummy;
-};
-
 struct deque_node
 {
     struct deque_node* next;
     struct deque_node* prev;
     void* data;
+};
+
+struct deque
+{
+    int size;
+    struct deque_node* dummy;
 };
 
 struct deque* deque_create();
