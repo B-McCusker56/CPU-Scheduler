@@ -3,7 +3,6 @@
 #ifndef DEQUE_H
 #define DEQUE_H
 
-struct deque_node;
 struct deque;
 
 struct deque* deque_create();
