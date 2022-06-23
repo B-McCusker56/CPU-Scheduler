@@ -3,6 +3,19 @@
 #include <stdlib.h>
 #include "deque.h"
 
+struct deque_node
+{
+    struct deque_node* next;
+    struct deque_node* prev;
+    void* data;
+};
+
+struct deque
+{
+    int size;
+    struct deque_node* dummy;
+};
+
 struct deque* deque_create()
 {
     struct deque* q = malloc(sizeof(struct deque));
