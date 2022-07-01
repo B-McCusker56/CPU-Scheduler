@@ -3,6 +3,14 @@
 #include <stdlib.h>
 #include "pq.h"
 
+struct pq_pair* pq_pair_create(double key, void* data)
+{
+    struct pq_pair* p = malloc(sizeof(struct pq_pair));
+    p->key = key;
+    p->data = data;
+    return p;
+}
+
 struct pq_node
 {
     int children;

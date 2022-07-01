@@ -12,6 +12,7 @@ struct pq_pair
     // Should be NULL or undefined until set by pq methods.
     struct pq_node* node;
 };
+struct pq_pair* pq_pair_create(double key, void* data);
 
 struct pq* pq_create();
 void pq_destroy(struct pq* h);
