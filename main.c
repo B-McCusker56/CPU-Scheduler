@@ -1,5 +1,7 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "exp.h"
 
 int main(int argc, char** argv)
 {
@@ -50,4 +52,7 @@ int main(int argc, char** argv)
         fprintf(stderr, "ERROR: expected int, got \"%s\"\n", argv[7]);
         return EXIT_FAILURE;
     }
+
+    srand48(seed);
+    set_exp_params(lambda, threshold);
 }
