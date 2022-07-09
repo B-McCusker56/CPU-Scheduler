@@ -10,7 +10,8 @@ int main(int argc, char** argv)
 #define S(x) S_(x)
     if(argc != NUM_ARGS + 1)
     {
-        fprintf(stderr, "ERROR: expected " S(NUM_ARGS) " arguments, got %d\n", argc - 1);
+        fprintf(stderr, "ERROR: expected " S(NUM_ARGS) " arguments, got %d\n",
+                argc - 1);
         return EXIT_FAILURE;
     }
 #define READ(type, name, arg, str, error, cond) \
@@ -20,7 +21,8 @@ int main(int argc, char** argv)
         fprintf(stderr, "ERROR: expected " error ", got \"%s\"\n", argv[arg]); \
         return EXIT_FAILURE; \
     }
-    READ(int, n, 1, "%d", "integer 1-" S(MAX_PROCESSES), n < 1 || n > MAX_PROCESSES);
+    READ(int, n, 1, "%d", "integer 1-" S(MAX_PROCESSES),
+         n < 1 || n > MAX_PROCESSES);
     READ(long, seed, 2, "%ld", "long int", 0);
     READ(double, lambda, 3, "%lf", "double", 0);
     READ(int, threshold, 4, "%d", "int", 0);
@@ -36,4 +38,5 @@ int main(int argc, char** argv)
 
     struct process processes[MAX_PROCESSES];
     gen_processes(processes, n, ceil(1 / lambda));
+    print_processes(processes, n);
 }

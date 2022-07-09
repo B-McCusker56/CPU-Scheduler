@@ -20,5 +20,6 @@ struct process
 };
 
 void gen_processes(struct process processes[MAX_PROCESSES], int n, int tau_0);
+void print_processes(struct process processes[MAX_PROCESSES], int n);
 
 #endif
