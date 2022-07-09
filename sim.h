@@ -11,6 +11,7 @@ struct burst
 };
 struct process
 {
+    char* name;
     int arrival;
     int tau_0;
     int num_bursts;
@@ -19,7 +20,7 @@ struct process
     int tau;
 };
 
-void gen_processes(struct process processes[MAX_PROCESSES], int n, int tau_0);
-void print_processes(struct process processes[MAX_PROCESSES], int n);
+void gen_processes(struct process* processes, int n, int tau_0);
+void print_processes(struct process* processes, int n);
 
 #endif
