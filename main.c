@@ -1,25 +1,7 @@
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "exp.h"
-
-#define NUM_ARGS 7
-#define MAX_PROCESSES 26
-
-struct burst
-{
-    int cpu;
-    int io;
-};
-struct process
-{
-    int arrival;
-    int tau_0;
-    int num_bursts;
-    struct burst* bursts;
-    // To be modified by scheduling algorithms.
-    int tau;
-};
+#include "sim.h"
 
 int main(int argc, char** argv)
 {
@@ -52,18 +34,5 @@ int main(int argc, char** argv)
     set_exp_params(lambda, threshold);
 
     struct process processes[MAX_PROCESSES];
-    for(int i = 0; i < n; ++i)
-    {
-        processes[i].arrival = floor(next_exp());
-        processes[i].tau_0 = ceil(1 / lambda);
-        processes[i].num_bursts = ceil(drand48() * 100);
-        processes[i].bursts = malloc(num_bursts * sizeof(struct burst));
-        for(int j = 0; ; ++i)
-        {
-            processes[i].bursts[j].cpu = ceil(next_exp());
-            if(j >= processes[i].num_bursts - 1)
-                break;
-            processes[i].bursts[j].io = ceil(next_exp()) * 10;
-        }
-    }
+    gen_processes(processes, n, ceil(1 / lambda));
 }
