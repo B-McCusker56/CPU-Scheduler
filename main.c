@@ -3,6 +3,22 @@
 #include <stdlib.h>
 #include "exp.h"
 
+
+struct burst
+{
+    int cpu;
+    int io;
+};
+struct process
+{
+    int arrival;
+    int tau_0;
+    int num_bursts;
+    struct burst* bursts;
+    // To be modified by scheduling algorithms.
+    int tau;
+};
+
 int main(int argc, char** argv)
 {
     if(argc != 8)
@@ -55,4 +71,20 @@ int main(int argc, char** argv)
 
     srand48(seed);
     set_exp_params(lambda, threshold);
+
+    struct process processes[26];
+    for(int i = 0; i < n; ++i)
+    {
+        processes[i].arrival = floor(next_exp());
+        processes[i].tau_0 = ceil(1 / lambda);
+        processes[i].num_bursts = ceil(drand48() * 100);
+        processes[i].bursts = malloc(num_bursts * sizeof(struct burst));
+        for(int j = 0; ; ++i)
+        {
+            processes[i].bursts[j].cpu = ceil(next_exp());
+            if(j >= processes[i].num_bursts - 1)
+                break;
+            processes[i].bursts[j].io = ceil(next_exp()) * 10;
+        }
+    }
 }
