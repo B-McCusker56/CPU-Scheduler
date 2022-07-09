@@ -37,6 +37,6 @@ void print_processes(struct process processes[MAX_PROCESSES], int n)
                 break;
             printf(" --> I/O burst %dms\n", processes[i].bursts[j].io);
         }
-        printf("\n");
+        putchar('\n');
     }
 }
