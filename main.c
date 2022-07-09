@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include "exp.h"
 
+#define NUM_ARGS 7
+#define MAX_PROCESSES 26
 
 struct burst
 {
@@ -21,58 +23,35 @@ struct process
 
 int main(int argc, char** argv)
 {
-    if(argc != 8)
+#define S_(x) #x
+#define S(x) S_(x)
+    if(argc != NUM_ARGS + 1)
     {
-        fprintf(stderr, "ERROR: expected 7 arguments, got %d\n", argc - 1);
+        fprintf(stderr, "ERROR: expected " S(NUM_ARGS) " arguments, got %d\n", argc - 1);
         return EXIT_FAILURE;
     }
-    int n;
-    if(!sscanf(argv[1], "%d", &n) || n < 1 || n > 26)
-    {
-        fprintf(stderr, "ERROR: expected integer 1-26, got \"%s\"\n", argv[1]);
-        return EXIT_FAILURE;
+#define READ(type, name, arg, str, error, cond) \
+    type name; \
+    if(!sscanf(argv[arg], str, &name) || cond) \
+    { \
+        fprintf(stderr, "ERROR: expected " error ", got \"%s\"\n", argv[arg]); \
+        return EXIT_FAILURE; \
     }
-    long seed;
-    if(!sscanf(argv[2], "%ld", &seed))
-    {
-        fprintf(stderr, "ERROR: expected long int, got \"%s\"\n", argv[2]);
-        return EXIT_FAILURE;
-    }
-    double lambda;
-    if(!sscanf(argv[3], "%lf", &lambda))
-    {
-        fprintf(stderr, "ERROR: expected double, got \"%s\"\n", argv[3]);
-        return EXIT_FAILURE;
-    }
-    int threshold;
-    if(!sscanf(argv[4], "%d", &threshold))
-    {
-        fprintf(stderr, "ERROR: expected int, got \"%s\"\n", argv[4]);
-        return EXIT_FAILURE;
-    }
-    int tcs;
-    if(!sscanf(argv[5], "%d", &tcs) || tcs & 1)
-    {
-        fprintf(stderr, "ERROR: expected even int, got \"%s\"\n", argv[5]);
-        return EXIT_FAILURE;
-    }
-    double alpha;
-    if(!sscanf(argv[6], "%lf", &alpha))
-    {
-        fprintf(stderr, "ERROR: expected double, got \"%s\"\n", argv[6]);
-        return EXIT_FAILURE;
-    }
-    int tslice;
-    if(!sscanf(argv[7], "%d", &tslice))
-    {
-        fprintf(stderr, "ERROR: expected int, got \"%s\"\n", argv[7]);
-        return EXIT_FAILURE;
-    }
+    READ(int, n, 1, "%d", "integer 1-" S(MAX_PROCESSES), n < 1 || n > MAX_PROCESSES);
+    READ(long, seed, 2, "%ld", "long int", 0);
+    READ(double, lambda, 3, "%lf", "double", 0);
+    READ(int, threshold, 4, "%d", "int", 0);
+    READ(int, tcs, 5, "%d", "even int", tcs & 1);
+    READ(double, alpha, 6, "%lf", "double", 0);
+    READ(int, tslice, 7, "%d", "int", 0);
+#undef S
+#undef S_
+#undef ERR
 
     srand48(seed);
     set_exp_params(lambda, threshold);
 
-    struct process processes[26];
+    struct process processes[MAX_PROCESSES];
     for(int i = 0; i < n; ++i)
     {
         processes[i].arrival = floor(next_exp());
