@@ -5,6 +5,8 @@ struct burst
 {
     int cpu;
     int io;
+    // To be modified by scheduling algorithms.
+    int cpu_remaining;
 };
 struct process
 {
@@ -15,9 +17,13 @@ struct process
     struct burst* bursts;
     // To be modified by scheduling algorithms.
     int tau;
+    int bursts_remaining;
 };
 
 void gen_processes(struct process* processes, int n, int tau_0);
 void print_processes(struct process* processes, int n);
+
+// Expects processes to be sorted by ascending start time.
+void sim_fcfs(struct process* processes, int n, int tcs);
 
 #endif
