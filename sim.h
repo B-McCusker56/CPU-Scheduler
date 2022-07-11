@@ -1,9 +1,6 @@
 #ifndef SIM_H
 #define SIM_H
 
-#define NUM_ARGS 7
-#define MAX_PROCESSES 26
-
 struct burst
 {
     int cpu;

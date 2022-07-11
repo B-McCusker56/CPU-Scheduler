@@ -4,6 +4,9 @@
 #include "exp.h"
 #include "sim.h"
 
+#define NUM_ARGS 7
+#define MAX_PROCESSES 26
+
 int main(int argc, char** argv)
 {
 #define S_(x) #x
