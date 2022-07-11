@@ -6,7 +6,7 @@ struct burst
     int cpu;
     int io;
     // To be modified by scheduling algorithms.
-    int cpu_remaining;
+    int cpu_done;
 };
 struct process
 {
@@ -17,7 +17,7 @@ struct process
     struct burst* bursts;
     // To be modified by scheduling algorithms.
     int tau;
-    int bursts_remaining;
+    int bursts_done;
 };
 
 void gen_processes(struct process* processes, int n, int tau_0);
