@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     READ(int, tslice, 7, "%d", "int", 0);
 #undef S
 #undef S_
-#undef ERR
+#undef READ
 
     srand48(seed);
     set_exp_params(lambda, threshold);
