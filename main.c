@@ -7,6 +7,14 @@
 #define NUM_ARGS 7
 #define MAX_PROCESSES 26
 
+static int cmpprocess(const void* _p1, const void* _p2)
+{
+    const struct process* p1 = _p1;
+    const struct process* p2 = _p2;
+    int arrival = p1->arrival - p2->arrival;
+    return arrival ? arrival : p1->name[0] - p2->name[0];
+}
+
 int main(int argc, char** argv)
 {
 #define S_(x) #x
@@ -41,5 +49,8 @@ int main(int argc, char** argv)
 
     struct process processes[MAX_PROCESSES];
     gen_processes(processes, n, ceil(1 / lambda));
+    print_processes(processes, n);
+
+    qsort(processes, n, sizeof(struct process), cmpprocess);
     print_processes(processes, n);
 }
