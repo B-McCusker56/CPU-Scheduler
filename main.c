@@ -53,4 +53,7 @@ int main(int argc, char** argv)
 
     qsort(processes, n, sizeof(struct process), cmpprocess);
     print_processes(processes, n);
+
+    for(int i = 0; i < n; ++i)
+        free(processes[i].bursts);
 }
