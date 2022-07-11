@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     READ(long, seed, 2, "%ld", "long int", 0);
     READ(double, lambda, 3, "%lf", "double", 0);
     READ(int, threshold, 4, "%d", "int", 0);
-    READ(int, tcs, 5, "%d", "even int", tcs & 1);
+    READ(int, tcs, 5, "%d", "positive even int", tcs <= 0 || tcs & 1);
     READ(double, alpha, 6, "%lf", "double", 0);
     READ(int, tslice, 7, "%d", "int", 0);
 #undef S
