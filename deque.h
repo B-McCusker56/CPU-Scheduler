@@ -13,4 +13,6 @@ void* deque_pop_front(struct deque* q);
 void* deque_pop_back(struct deque* q);
 int deque_size(struct deque* q);
 
+void deque_print(struct deque* q, char* (*printwhat)(void*));
+
 #endif

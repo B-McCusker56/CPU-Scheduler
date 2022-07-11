@@ -1,5 +1,6 @@
 /* Simple deque implementation using a doubly linked list. */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include "deque.h"
 
@@ -108,4 +109,16 @@ void* deque_pop_back(struct deque* q)
 int deque_size(struct deque* q)
 {
     return q ? q->size : -1;
+}
+
+void deque_print(struct deque* q, char* (*printwhat)(void*))
+{
+    struct deque_node* cur = q->dummy->next;
+    for(; ; cur = cur->next)
+    {
+        printf("%s", printwhat(cur->data));
+        if(cur->next == q->dummy)
+            break;
+        putchar(' ');
+    }
 }
