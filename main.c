@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     print_processes(processes, n);
 
     qsort(processes, n, sizeof(struct process), cmpprocess);
-    print_processes(processes, n);
+    sim_fcfs(processes, n, tcs);
 
     for(int i = 0; i < n; ++i)
         free(processes[i].bursts);
