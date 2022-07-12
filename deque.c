@@ -113,6 +113,11 @@ int deque_size(struct deque* q)
 
 void deque_print(struct deque* q, char* (*printwhat)(void*))
 {
+    if(!q->size)
+    {
+        printf("empty");
+        return;
+    }
     struct deque_node* cur = q->dummy->next;
     for(; ; cur = cur->next)
     {
