@@ -111,7 +111,7 @@ int deque_size(struct deque* q)
     return q ? q->size : -1;
 }
 
-void deque_print(struct deque* q, char* (*printwhat)(void*))
+void deque_print(struct deque* q, void (*print)(void*))
 {
     if(!q->size)
     {
@@ -121,7 +121,7 @@ void deque_print(struct deque* q, char* (*printwhat)(void*))
     struct deque_node* cur = q->dummy->next;
     for(; ; cur = cur->next)
     {
-        printf("%s", printwhat(cur->data));
+        print(cur->data);
         if(cur->next == q->dummy)
             break;
         putchar(' ');
