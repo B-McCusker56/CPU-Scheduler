@@ -72,7 +72,7 @@ void sim_fcfs(struct process* processes, int n, int tcs)
     while(0)
 #define REWIND() \
     do { --time; \
-        if(switch_in < tcs) ++switch_in; if(switch_out) ++switch_out; } \
+        if(switch_in < tcs) ++switch_in; } \
     while(0)
     for(; p < n || using_cpu || deque_size(q) || !pq_empty(ioq); ++time)
     {
@@ -123,7 +123,11 @@ void sim_fcfs(struct process* processes, int n, int tcs)
             PRINT_EVENT("Process %s completed I/O; added to ready queue",
                         proc->name);
             free(item);
+            // Re-simulate one ms, since more processes may leave IO at the same
+            // time. Also, the CPU should realize immediately that something new
+            // is in the queue.
             REWIND();
+            continue;
         }
         // New process arrivals.
         if(p < n && processes[p].arrival == time)
@@ -133,10 +137,9 @@ void sim_fcfs(struct process* processes, int n, int tcs)
             PRINT_EVENT("Process %s arrived; added to ready queue",
                         processes[p].name);
             ++p;
-            // Re-simulate one ms, since more processes may arrive at the same
-            // time. Also, the CPU should realize immediately that something new
-            // is in the queue.
+            // See reasoning above.
             REWIND();
+            continue;
         }
         if(switch_out)
             --switch_out;
