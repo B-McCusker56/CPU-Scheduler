@@ -20,7 +20,7 @@ double next_exp()
     return res;
 }
 
-double next_tau(double t, double tau)
+int next_tau(int t, int tau)
 {
-	return alpha * t + (1 - alpha) * tau;
+	return ceil(alpha * t + (1 - alpha) * tau);
 }
