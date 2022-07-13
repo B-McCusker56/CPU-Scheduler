@@ -113,8 +113,6 @@ void sim_fcfs(struct process* processes, int n, int tcs)
             else
                 --switch_in;
         }
-        if(switch_out)
-            --switch_out;
         // I/O burst completions.
         if(!pq_empty(ioq) && pq_find_min(ioq)->key == time)
         {
@@ -140,6 +138,8 @@ void sim_fcfs(struct process* processes, int n, int tcs)
             // is in the queue.
             REWIND();
         }
+        if(switch_out)
+            --switch_out;
     }
 #undef PRINT_EVENT
 #undef REWIND
