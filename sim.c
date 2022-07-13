@@ -127,7 +127,7 @@ void sim_fcfs(struct process* processes, int n, int tcs)
             REWIND();
         }
         // New process arrivals.
-        if(processes[p].arrival == time)
+        if(p < n && processes[p].arrival == time)
         {
             processes[p].bursts_done = 0;
             deque_push_back(q, &processes[p]);
