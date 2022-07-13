@@ -1,5 +1,6 @@
 /* Priority-queue implementation using a pairing heap. All keys are doubles. */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include "pq.h"
 
@@ -168,4 +169,22 @@ int pq_delete(struct pq_node** h, struct pq_pair* x)
 int pq_empty(struct pq_node** h)
 {
     return !*h;
+}
+
+void pq_print(struct pq* q, void (*print)(void*))
+{
+    if(pq_empty(q))
+    {
+        printf("empty");
+        return;
+    }
+    struct pq* npq = pq_create();
+    while (!pq_empty(q))
+    {
+        struct pq_pair* cur = pq_delete_min(q);
+        print(cur->data);
+        pq_insert(npq, cur);
+    }
+    *q = *npq;
+    free(npq);
 }

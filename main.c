@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 #undef READ
 
     srand48(seed);
-    set_exp_params(lambda, threshold);
+    set_exp_params(lambda, threshold, alpha);
 
     struct process processes[MAX_PROCESSES];
     gen_processes(processes, n, ceil(1 / lambda));
@@ -54,6 +54,7 @@ int main(int argc, char** argv)
     putchar('\n');
     qsort(processes, n, sizeof(struct process), cmpprocess);
     sim_fcfs(processes, n, tcs);
+    sim_sjf(processes, n, tcs);
 
     for(int i = 0; i < n; ++i)
         free(processes[i].bursts);
