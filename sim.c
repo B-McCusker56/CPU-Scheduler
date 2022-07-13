@@ -33,9 +33,10 @@ void print_processes(struct process* processes, int n)
 {
     for(int i = 0; i < n; ++i)
     {
-        printf("Process %s: arrival time %dms; tau %dms; %d CPU bursts:\n",
+        printf("Process %s: arrival time %dms; tau %dms; %d CPU burst%s:\n",
                processes[i].name, processes[i].arrival, processes[i].tau_0,
-               processes[i].num_bursts);
+               processes[i].num_bursts,
+               processes[i].num_bursts == 1 ? "" : "s");
         for(int j = 0; ; ++j)
         {
             printf("--> CPU burst %dms", processes[i].bursts[j].cpu);
