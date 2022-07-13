@@ -51,9 +51,11 @@ int main(int argc, char** argv)
     gen_processes(processes, n, ceil(1 / lambda));
     print_processes(processes, n);
 
-    putchar('\n');
     qsort(processes, n, sizeof(struct process), cmpprocess);
+    putchar('\n');
     sim_fcfs(processes, n, tcs);
+    putchar('\n');
+    sim_rr(processes, n, tcs, tslice);
 
     for(int i = 0; i < n; ++i)
         free(processes[i].bursts);

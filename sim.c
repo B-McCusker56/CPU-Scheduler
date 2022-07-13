@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +23,7 @@ void gen_processes(struct process* processes, int n, int tau_0)
         for(int j = 0; ; ++j)
         {
             processes[i].bursts[j].cpu = ceil(next_exp());
+            processes[i].bursts[j].cpu_left = 0;
             if(j >= processes[i].num_bursts - 1)
                 break;
             processes[i].bursts[j].io = ceil(next_exp()) * 10;
@@ -53,9 +55,8 @@ void print_process_name(void* i)
 {
     printf("%s", ((struct process*) i)->name);
 }
-void sim_fcfs(struct process* processes, int n, int tcs)
+static int rr(struct process* processes, int n, int tcs, int tslice)
 {
-    puts("time 0ms: Simulator started for FCFS [Q: empty]");
     int time = processes[0].arrival;
     struct process* using_cpu = NULL;
     struct deque* q = deque_create();
@@ -66,7 +67,7 @@ void sim_fcfs(struct process* processes, int n, int tcs)
     int switch_out = 0;
     int p = 0;
 #define PRINT_EVENT(msg, ...) \
-    do { printf("time %dms: " msg " [Q: ", time, __VA_ARGS__); \
+    do { printf("time %dms: " msg " [Q: ", time, ##__VA_ARGS__); \
         deque_print(q, print_process_name); \
         puts("]"); } \
     while(0)
@@ -76,9 +77,9 @@ void sim_fcfs(struct process* processes, int n, int tcs)
     while(0)
     for(; p < n || using_cpu || deque_size(q) || !pq_empty(ioq); ++time)
     {
-        // CPU burst completions.
+        // CPU-burst completions.
         if(using_cpu && time - cpu_time
-                     == using_cpu->bursts[using_cpu->bursts_done].cpu)
+                     == using_cpu->bursts[using_cpu->bursts_done].cpu_left)
         {
             if(using_cpu->bursts_done < using_cpu->num_bursts - 1)
             {
@@ -95,8 +96,27 @@ void sim_fcfs(struct process* processes, int n, int tcs)
             }
             else
                 PRINT_EVENT("Process %s terminated", using_cpu->name);
+            using_cpu->bursts[using_cpu->bursts_done].cpu_left = 0;
             using_cpu = NULL;
             switch_out = tcs;
+        }
+        // Time-slice expirations.
+        if(using_cpu && time - cpu_time == tslice)
+        {
+            cpu_time = time;
+            using_cpu->bursts[using_cpu->bursts_done].cpu_left -= tslice;
+            if(deque_size(q))
+            {
+                PRINT_EVENT("Time slice expired; process %s preempted with %dms"
+                            " remaining", using_cpu->name,
+                            using_cpu->bursts[using_cpu->bursts_done].cpu_left);
+                deque_push_back(q, using_cpu);
+                using_cpu = NULL;
+                switch_out = tcs;
+            }
+            else
+                PRINT_EVENT("Time slice expired; no preemption because ready "
+                            "queue is empty");
         }
         // Processes starting to use the CPU.
         if(!using_cpu && !switch_out && deque_size(q))
@@ -105,15 +125,23 @@ void sim_fcfs(struct process* processes, int n, int tcs)
             {
                 using_cpu = deque_pop_front(q);
                 cpu_time = time;
-                PRINT_EVENT("Process %s started using the CPU for %dms burst",
-                            using_cpu->name,
-                            using_cpu->bursts[using_cpu->bursts_done].cpu);
+                struct burst* b = &using_cpu->bursts[using_cpu->bursts_done];
+                if(!b->cpu_left)
+                {
+                    b->cpu_left = b->cpu;
+                    PRINT_EVENT("Process %s started using the CPU for %dms "
+                                "burst", using_cpu->name, b->cpu);
+                }
+                else
+                    PRINT_EVENT("Process %s started using the CPU for "
+                                "remaining %dms of %dms burst",
+                                using_cpu->name, b->cpu_left, b->cpu);
                 switch_in = tcs;
             }
             else
                 --switch_in;
         }
-        // I/O burst completions.
+        // I/O-burst completions.
         if(!pq_empty(ioq) && pq_find_min(ioq)->key == time)
         {
             struct pq_pair* item = pq_delete_min(ioq);
@@ -148,5 +176,18 @@ void sim_fcfs(struct process* processes, int n, int tcs)
 #undef REWIND
     deque_destroy(q);
     pq_destroy(ioq);
-    printf("time %dms: Simulator ended for FCFS [Q: empty]\n", time + tcs - 1);
+    return time + tcs - 1;
+}
+void sim_fcfs(struct process* processes, int n, int tcs)
+{
+    puts("time 0ms: Simulator started for FCFS [Q: empty]");
+    int time = rr(processes, n, tcs, INT_MAX);
+    printf("time %dms: Simulator ended for FCFS [Q: empty]\n", time);
+}
+void sim_rr(struct process* processes, int n, int tcs, int tslice)
+{
+    printf("time 0ms: Simulator started for RR with time slice %dms [Q: empty"
+           "]\n", tslice);
+    int time = rr(processes, n, tcs, tslice);
+    printf("time %dms: Simulator ended for RR [Q: empty]\n", time);
 }
