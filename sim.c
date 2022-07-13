@@ -64,6 +64,15 @@ void sim_fcfs(struct process* processes, int n, int tcs)
     int switch_in = tcs;
     int switch_out = 0;
     int p = 0;
+#define PRINT_EVENT(msg, ...) \
+    do { printf("time %dms: " msg " [Q: ", time, __VA_ARGS__); \
+        deque_print(q, print_process_name); \
+        puts("]"); } \
+    while(0)
+#define REWIND() \
+    do { --time; \
+        if(switch_in < tcs) ++switch_in; if(switch_out) ++switch_out; } \
+    while(0)
     for(; p < n || using_cpu || deque_size(q) || !pq_empty(ioq); ++time)
     {
         // CPU burst completions.
@@ -72,18 +81,19 @@ void sim_fcfs(struct process* processes, int n, int tcs)
         {
             if(using_cpu->bursts_done < using_cpu->num_bursts - 1)
             {
-                printf("time %dms: Process %s switching out of CPU; will block "
-                       "on I/O until time %dms [Q: ", time, using_cpu->name,
-                       time + using_cpu->bursts[using_cpu->bursts_done].io);
-                int io = using_cpu->bursts[using_cpu->bursts_done].io;
-                struct pq_pair* item = pq_pair_create(time + io, using_cpu);
+                int to_go = using_cpu->num_bursts - using_cpu->bursts_done - 1;
+                PRINT_EVENT("Process %s completed a CPU burst; %d burst%s to "
+                            "go", using_cpu->name, to_go,
+                            to_go == 1 ? "" : "s");
+                int io = time + tcs
+                       + using_cpu->bursts[using_cpu->bursts_done].io;
+                PRINT_EVENT("Process %s switching out of CPU; will block on "
+                            "I/O until time %dms", using_cpu->name, io);
+                struct pq_pair* item = pq_pair_create(io, using_cpu);
                 pq_insert(ioq, item);
             }
             else
-                printf("time %dms: Process %s terminated [Q: ", time,
-                       using_cpu->name);
-            deque_print(q, print_process_name);
-            puts("]");
+                PRINT_EVENT("Process %s terminated", using_cpu->name);
             using_cpu = NULL;
             switch_out = tcs;
         }
@@ -94,11 +104,9 @@ void sim_fcfs(struct process* processes, int n, int tcs)
             {
                 using_cpu = deque_pop_front(q);
                 cpu_time = time;
-                printf("time %dms: Process %s started using the CPU for %dms "
-                       "burst [Q: ", time, using_cpu->name,
-                       using_cpu->bursts[using_cpu->bursts_done].cpu);
-                deque_print(q, print_process_name);
-                puts("]");
+                PRINT_EVENT("Process %s started using the CPU for %dms burst",
+                            using_cpu->name,
+                            using_cpu->bursts[using_cpu->bursts_done].cpu);
                 switch_in = tcs;
             }
             else
@@ -113,28 +121,28 @@ void sim_fcfs(struct process* processes, int n, int tcs)
             struct process* proc = item->data;
             ++proc->bursts_done;
             deque_push_back(q, proc);
-            printf("time %dms: Process %s completed I/O; added to ready queue "
-                   "[Q: ", time, proc->name);
-            deque_print(q, print_process_name);
-            puts("]");
+            PRINT_EVENT("Process %s completed I/O; added to ready queue",
+                        proc->name);
             free(item);
+            REWIND();
         }
         // New process arrivals.
         if(processes[p].arrival == time)
         {
             processes[p].bursts_done = 0;
             deque_push_back(q, &processes[p]);
-            printf("time %dms: Process %s arrived; added to ready queue [Q: ",
-                   time, processes[p].name);
-            deque_print(q, print_process_name);
-            puts("]");
+            PRINT_EVENT("Process %s arrived; added to ready queue",
+                        processes[p].name);
             ++p;
             // Re-simulate one ms, since more processes may arrive at the same
             // time. Also, the CPU should realize immediately that something new
             // is in the queue.
-            --time;
+            REWIND();
         }
     }
+#undef PRINT_EVENT
+#undef REWIND
     deque_destroy(q);
     pq_destroy(ioq);
+    printf("time %dms: Simulator ended for FCFS [Q: empty]\n", time + tcs - 1);
 }

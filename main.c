@@ -51,6 +51,7 @@ int main(int argc, char** argv)
     gen_processes(processes, n, ceil(1 / lambda));
     print_processes(processes, n);
 
+    putchar('\n');
     qsort(processes, n, sizeof(struct process), cmpprocess);
     sim_fcfs(processes, n, tcs);
 
