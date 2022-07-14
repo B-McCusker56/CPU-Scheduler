@@ -192,3 +192,110 @@ void sim_rr(struct process* processes, int n, int tcs, int tslice)
     int time = rr(processes, n, tcs, tslice);
     printf("time %dms: Simulator ended for RR [Q: empty]\n", time);
 }
+
+void sim_sjf(struct process* processes, int n, int tcs)
+{
+    puts("time 0ms: Simulator started for SJF [Q: empty]");
+    int time = processes[0].arrival;
+    struct process* using_cpu = NULL;
+    struct pq* q = pq_create();
+    struct pq* ioq = pq_create();
+    int cpu_time;
+    tcs >>= 1;
+    int switch_in = tcs;
+    int switch_out = 0;
+    int p = 0;
+#define PRINT_EVENT(msg, ...) \
+    do { printf("time %dms: " msg " [Q: ", time, __VA_ARGS__); \
+        pq_print(q, print_process_name); \
+        puts("]"); } \
+    while(0)
+#define REWIND() \
+    do { --time; \
+        if(switch_in < tcs) ++switch_in; } \
+    while(0)
+    for(; p < n || using_cpu || !pq_empty(q) || !pq_empty(ioq); ++time)
+    {
+        // CPU burst completions.
+        if(using_cpu && time - cpu_time
+                     == using_cpu->bursts[using_cpu->bursts_done].cpu)
+        {
+            if(using_cpu->bursts_done < using_cpu->num_bursts - 1)
+            {
+                int to_go = using_cpu->num_bursts - using_cpu->bursts_done - 1;
+                PRINT_EVENT("Process %s (tau %dms) completed a CPU burst; %d burst%s to "
+                            "go", using_cpu->name, using_cpu->tau, to_go,
+                            to_go == 1 ? "" : "s");
+                int io = time + tcs
+                       + using_cpu->bursts[using_cpu->bursts_done].io;
+                int new_tau = next_tau(using_cpu->bursts[using_cpu->bursts_done].cpu, using_cpu->tau);
+                PRINT_EVENT("Recalculated tau for process %s: old tau %dms; new tau %dms",
+                            using_cpu->name, using_cpu->tau, new_tau);
+                using_cpu->tau = new_tau;
+                PRINT_EVENT("Process %s switching out of CPU; will block on "
+                            "I/O until time %dms", using_cpu->name, io);
+                struct pq_pair* item = pq_pair_create(io, using_cpu);
+                pq_insert(ioq, item);
+            }
+            else
+                PRINT_EVENT("Process %s terminated", using_cpu->name);
+            using_cpu = NULL;
+            switch_out = tcs;
+        }
+        // Processes starting to use the CPU.
+        if(!using_cpu && !switch_out && !pq_empty(q))
+        {
+            if(!switch_in)
+            {
+                using_cpu = pq_delete_min(q)->data;
+                cpu_time = time;
+                PRINT_EVENT("Process %s (tau %dms) started using the CPU for %dms burst",
+                            using_cpu->name, using_cpu->tau,
+                            using_cpu->bursts[using_cpu->bursts_done].cpu);
+                switch_in = tcs;
+            }
+            else
+                --switch_in;
+        }
+        // I/O burst completions.
+        if(!pq_empty(ioq) && pq_find_min(ioq)->key == time)
+        {
+            struct pq_pair* item = pq_delete_min(ioq);
+            struct process* proc = item->data;
+            ++proc->bursts_done;
+            struct pq_pair* process =
+                pq_pair_create(proc->tau + (proc->name[0] / 100.0), proc);
+            pq_insert(q, process);
+            PRINT_EVENT("Process %s (tau %dms) completed I/O; added to ready queue",
+                        proc->name, proc->tau);
+            free(item);
+            // Re-simulate one ms, since more processes may leave IO at the same
+            // time. Also, the CPU should realize immediately that something new
+            // is in the queue.
+            REWIND();
+            continue;
+        }
+        // New process arrivals.
+        if(p < n && processes[p].arrival == time)
+        {
+            processes[p].bursts_done = 0;
+            processes[p].tau = processes[p].tau_0;
+            struct pq_pair* process =
+                pq_pair_create(processes[p].tau + (processes[p].name[0] / 100.0), &processes[p]);
+            pq_insert(q, process);
+            PRINT_EVENT("Process %s (tau %dms) arrived; added to ready queue",
+                        processes[p].name, processes[p].tau_0);
+            ++p;
+            // See reasoning above.
+            REWIND();
+            continue;
+        }
+        if(switch_out)
+            --switch_out;
+    }
+#undef PRINT_EVENT
+#undef REWIND
+    pq_destroy(q);
+    pq_destroy(ioq);
+    printf("time %dms: Simulator ended for SJF [Q: empty]\n", time + tcs - 1);
+}

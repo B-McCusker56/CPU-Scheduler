@@ -24,4 +24,6 @@ int pq_decrease_key(struct pq* h, struct pq_pair* x, double new_key);
 int pq_delete(struct pq* h, struct pq_pair* x);
 int pq_empty(struct pq* h);
 
+void pq_print(struct pq* q, void (*print)(void*));
+
 #endif
