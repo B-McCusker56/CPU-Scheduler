@@ -91,7 +91,8 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
                        + using_cpu->bursts[using_cpu->bursts_done].io;
                 PRINT_EVENT("Process %s switching out of CPU; will block on "
                             "I/O until time %dms", using_cpu->name, io);
-                struct pq_pair* item = pq_pair_create(io, using_cpu);
+                double key = io + using_cpu->name[0] / 100.0;
+                struct pq_pair* item = pq_pair_create(key, using_cpu);
                 pq_insert(ioq, item);
             }
             else
@@ -142,7 +143,7 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
                 --switch_in;
         }
         // I/O-burst completions.
-        if(!pq_empty(ioq) && pq_find_min(ioq)->key == time)
+        if(!pq_empty(ioq) && floor(pq_find_min(ioq)->key) == time)
         {
             struct pq_pair* item = pq_delete_min(ioq);
             struct process* proc = item->data;
