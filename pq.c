@@ -184,6 +184,9 @@ void pq_print(struct pq* q, void (*print)(void*))
         struct pq_pair* cur = pq_delete_min(q);
         print(cur->data);
         pq_insert(npq, cur);
+        if(pq_empty(q))
+            break;
+        putchar(' ');
     }
     *q = *npq;
     free(npq);
