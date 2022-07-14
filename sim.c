@@ -222,7 +222,7 @@ void sim_sjf(struct process* processes, int n, int tcs)
             struct process* proc = item->data;
             ++proc->bursts_done;
             struct pq_pair* process = 
-                pq_pair_create(proc->tau, proc);
+                pq_pair_create(proc->tau + (proc->name[0] / 100.0), proc);
             pq_insert(q, process);
             PRINT_EVENT("Process %s (tau %dms) completed I/O; added to ready queue",
                         proc->name, proc->tau);
@@ -239,7 +239,7 @@ void sim_sjf(struct process* processes, int n, int tcs)
             processes[p].bursts_done = 0;
             processes[p].tau = processes[p].tau_0;
             struct pq_pair* process = 
-                pq_pair_create(processes[p].tau, &processes[p]);
+                pq_pair_create(processes[p].tau + (processes[p].name[0] / 100.0), &processes[p]);
             pq_insert(q, process);
             PRINT_EVENT("Process %s (tau %dms) arrived; added to ready queue",
                         processes[p].name, processes[p].tau_0);
