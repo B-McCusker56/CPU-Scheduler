@@ -419,13 +419,10 @@ void sim_srt(struct process* processes, int n, int tcs)
         pq_print(q, print_process_name); \
         puts("]"); } \
     while(0)
-#define READY_PROCESS(proc) \
-    do { struct burst* b = &(proc)->bursts[(proc)->bursts_done]; \
-        int tau = (proc)->tau; \
-        if(b->cpu_left) tau -= b->cpu - b->cpu_left; \
-        struct pq_pair* proc_pair = \
+#define READY_PROCESS(proc, tau) \
+    do { struct pq_pair* proc_pair = \
             pq_pair_create(tau + (proc)->name[0] / 100.0, (proc)); \
-    pq_insert(q, proc_pair); } \
+        pq_insert(q, proc_pair); } \
     while(0)
 
     // Run until (1) all processes have arrived, (2) the CPU is done working,
@@ -472,7 +469,8 @@ void sim_srt(struct process* processes, int n, int tcs)
         case PREEMPTED:
             if(time - switch_time == tcs >> 1)
             {
-                READY_PROCESS(running);
+                struct burst* b = &running->bursts[running->bursts_done];
+                READY_PROCESS(running, running->tau - b->cpu + b->cpu_left);
                 state = WAITING;
                 continue;
             }
@@ -543,7 +541,7 @@ void sim_srt(struct process* processes, int n, int tcs)
             struct process* proc = item->data;
             free(item);
             ++proc->bursts_done;
-            READY_PROCESS(proc);
+            READY_PROCESS(proc, proc->tau);
             // Check if we can preempt.
             if(state == RUNNING)
             {
@@ -572,7 +570,7 @@ void sim_srt(struct process* processes, int n, int tcs)
         {
             processes[p].bursts_done = 0;
             processes[p].tau = processes[p].tau_0;
-            READY_PROCESS(&processes[p]);
+            READY_PROCESS(&processes[p], processes[p].tau);
             // Check if we can preempt.
             if(state == RUNNING)
             {
