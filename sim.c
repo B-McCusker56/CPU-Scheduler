@@ -247,6 +247,8 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
         ++time;
     }
 #undef PRINT_EVENT
+    deque_destroy(q);
+    pq_destroy(ioq);
     return time;
 }
 void sim_fcfs(struct process* processes, int n, int tcs)
