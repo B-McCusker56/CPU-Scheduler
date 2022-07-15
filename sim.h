@@ -1,6 +1,9 @@
 #ifndef SIM_H
 #define SIM_H
 
+// When this is defined, output is limited to time 999 ms.
+#define LIMIT_LINES
+
 struct burst
 {
     int cpu;

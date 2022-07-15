@@ -89,11 +89,22 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
     // Time at which the last context switch began.
     int switch_time;
 
+#ifndef LIMIT_LINES
 #define PRINT_EVENT(msg, ...) \
     do { printf("time %dms: " msg " [Q: ", time, ##__VA_ARGS__); \
         deque_print(q, print_process_name); \
         puts("]"); } \
     while(0)
+#else
+#define PRINT_EVENT(msg, ...) \
+    do { if(time <= 999) \
+        { \
+            printf("time %dms: " msg " [Q: ", time, ##__VA_ARGS__); \
+            deque_print(q, print_process_name); \
+            puts("]"); \
+        } } \
+    while(0)
+#endif
 
     // Run until (1) all processes have arrived, (2) the CPU is done working,
     // (3) the ready queue is empty, and (4) all processes have finished IO.
@@ -119,7 +130,14 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
                                 time + (tcs >> 1) + current_burst->io);
                 }
                 else
-                    PRINT_EVENT("Process %s terminated", running->name);
+                {
+                    // We don't use PRINT_EVENT here since this always prints,
+                    // even if we are limiting to time 999.
+                    printf("time %dms: Process %s terminated [Q: ", time,
+                           running->name);
+                    deque_print(q, print_process_name);
+                    puts("]");
+                }
                 state = SWITCHING_OUT;
             }
             // Time-slice expirations.
@@ -271,11 +289,22 @@ static int srt(struct process* processes, int n, int tcs, int preempt)
     // Time at which the last context switch began.
     int switch_time;
 
+#ifndef LIMIT_LINES
 #define PRINT_EVENT(msg, ...) \
     do { printf("time %dms: " msg " [Q: ", time, ##__VA_ARGS__); \
         pq_print(q, print_process_name); \
         puts("]"); } \
     while(0)
+#else
+#define PRINT_EVENT(msg, ...) \
+    do { if(time <= 999) \
+        { \
+            printf("time %dms: " msg " [Q: ", time, ##__VA_ARGS__); \
+            pq_print(q, print_process_name); \
+            puts("]"); \
+        } } \
+    while(0)
+#endif
 #define READY_PROCESS(proc, tau) \
     do { struct pq_pair* proc_pair = \
             pq_pair_create(tau + (proc)->name[0] / 100.0, (proc)); \
@@ -311,7 +340,14 @@ static int srt(struct process* processes, int n, int tcs, int preempt)
                                 time + (tcs >> 1) + current_burst->io);
                 }
                 else
-                    PRINT_EVENT("Process %s terminated", running->name);
+                {
+                    // We don't use PRINT_EVENT here since this always prints,
+                    // even if we are limiting to time 999.
+                    printf("time %dms: Process %s terminated [Q: ", time,
+                           running->name);
+                    pq_print(q, print_process_name);
+                    puts("]");
+                }
                 state = SWITCHING_OUT;
             }
             break;
