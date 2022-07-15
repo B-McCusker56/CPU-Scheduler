@@ -26,6 +26,7 @@ void print_processes(struct process* processes, int n);
 // Expects processes to be sorted by ascending start time.
 void sim_fcfs(struct process* processes, int n, int tcs);
 void sim_sjf(struct process* processes, int n, int tcs);
+void sim_srt(struct process* processes, int n, int tcs);
 void sim_rr(struct process* processes, int n, int tcs, int tslice);
 
 #endif

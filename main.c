@@ -57,6 +57,8 @@ int main(int argc, char** argv)
     putchar('\n');
     sim_sjf(processes, n, tcs);
     putchar('\n');
+    sim_srt(processes, n, tcs);
+    putchar('\n');
     sim_rr(processes, n, tcs, tslice);
 
     for(int i = 0; i < n; ++i)
