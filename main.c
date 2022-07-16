@@ -9,16 +9,17 @@
 
 static void write_stats(struct stats* stats, FILE* out)
 {
+    // Adding 0.0004 forces rounding up except when the fourth place is 0.
     fprintf(out, "-- average CPU burst time: %.3lf ms\n",
-            (double) stats->burst / stats->bursts + 0.0005);
+            ceil((double) stats->burst / stats->bursts * 1000) / 1000.0);
     fprintf(out, "-- average wait time: %.3lf ms\n",
-            (double) stats->wait / stats->bursts + 0.0005);
+            ceil((double) stats->wait / stats->bursts * 1000) / 1000.0);
     fprintf(out, "-- average turnaround time: %.3lf ms\n",
-            (double) stats->turnaround / stats->bursts + 0.0005);
+            ceil((double) stats->turnaround / stats->bursts * 1000) / 1000.0);
     fprintf(out, "-- total number of context switches: %d\n", stats->switches);
     fprintf(out, "-- total number of preemptions: %d\n", stats->preemptions);
     fprintf(out, "-- CPU utilization: %.3lf%%\n",
-            (double) stats->burst / stats->time * 100 + 0.0005);
+            ceil((double) stats->burst / stats->time * 100000) / 1000.0);
 }
 
 static int cmpprocess(const void* _p1, const void* _p2)
