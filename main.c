@@ -7,6 +7,20 @@
 #define NUM_ARGS 7
 #define MAX_PROCESSES 26
 
+static void write_stats(struct stats* stats, FILE* out)
+{
+    fprintf(out, "-- average CPU burst time: %.3lf ms\n",
+            (double) stats->burst / stats->bursts + 0.0005);
+    fprintf(out, "-- average wait time: %.3lf ms\n",
+            (double) stats->wait / stats->bursts + 0.0005);
+    fprintf(out, "-- average turnaround time: %.3lf ms\n",
+            (double) stats->turnaround / stats->bursts + 0.0005);
+    fprintf(out, "-- total number of context switches: %d\n", stats->switches);
+    fprintf(out, "-- total number of preemptions: %d\n", stats->preemptions);
+    fprintf(out, "-- CPU utilization: %.3lf%%\n",
+            (double) stats->burst / stats->time * 100 + 0.0005);
+}
+
 static int cmpprocess(const void* _p1, const void* _p2)
 {
     const struct process* p1 = _p1;
@@ -52,14 +66,35 @@ int main(int argc, char** argv)
     print_processes(processes, n);
 
     qsort(processes, n, sizeof(struct process), cmpprocess);
+
+    FILE* out = fopen("simout.txt", "w");
+    struct stats* stats;
+
     putchar('\n');
-    sim_fcfs(processes, n, tcs);
+    stats = sim_fcfs(processes, n, tcs);
+    fprintf(out, "Algorithm FCFS\n");
+    write_stats(stats, out);
+    free(stats);
+
     putchar('\n');
-    sim_sjf(processes, n, tcs);
+    stats = sim_sjf(processes, n, tcs);
+    fprintf(out, "Algorithm SJF\n");
+    write_stats(stats, out);
+    free(stats);
+
     putchar('\n');
-    sim_srt(processes, n, tcs);
+    stats = sim_srt(processes, n, tcs);
+    fprintf(out, "Algorithm SRT\n");
+    write_stats(stats, out);
+    free(stats);
+
     putchar('\n');
-    sim_rr(processes, n, tcs, tslice);
+    stats = sim_rr(processes, n, tcs, tslice);
+    fprintf(out, "Algorithm RR\n");
+    write_stats(stats, out);
+    free(stats);
+
+    fclose(out);
 
     for(int i = 0; i < n; ++i)
         free(processes[i].bursts);

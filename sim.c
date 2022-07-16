@@ -70,8 +70,9 @@ enum state
     // the process is moved back to the ready queue instead of into IO.
     PREEMPTED,
 };
-static int rr(struct process* processes, int n, int tcs, int tslice)
+static struct stats* rr(struct process* processes, int n, int tcs, int tslice)
 {
+    struct stats* stats = calloc(1, sizeof(struct stats));
     int time = processes[0].arrival;
     // Current CPU state.
     enum state state = WAITING;
@@ -117,6 +118,8 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
             // Check for CPU-burst completion.
             if(time - cpu_time == current_burst->cpu_left)
             {
+                ++stats->bursts;
+                stats->burst += current_burst->cpu;
                 current_burst->cpu_left = 0;
                 switch_time = time;
                 if(running->bursts_done < running->num_bursts - 1)
@@ -169,6 +172,7 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
         case PREEMPTED:
             if(time - switch_time == tcs >> 1)
             {
+                ++stats->preemptions;
                 deque_push_back(q, running);
                 state = WAITING;
                 continue;
@@ -177,6 +181,7 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
         case SWITCHING_OUT:
             if(time - switch_time == tcs >> 1)
             {
+                stats->turnaround += time;
                 // Make sure process has not terminated.
                 if(running->bursts_done < running->num_bursts - 1)
                 {
@@ -201,6 +206,7 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
         case SWITCHING_IN:
             if(time - switch_time == tcs >> 1)
             {
+                ++stats->switches;
                 cpu_time = time;
                 struct burst* b = &running->bursts[running->bursts_done];
                 if(!b->cpu_left)
@@ -220,6 +226,7 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
         // IO-burst completions.
         if(!pq_empty(ioq) && floor(pq_find_min(ioq)->key) == time)
         {
+            stats->turnaround -= time;
             struct pq_pair* item = pq_delete_min(ioq);
             struct process* proc = item->data;
             free(item);
@@ -235,6 +242,7 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
         // New process arrivals.
         if(p < n && processes[p].arrival == time)
         {
+            stats->turnaround -= time;
             processes[p].bursts_done = 0;
             deque_push_back(q, &processes[p]);
             PRINT_EVENT("Process %s arrived; added to ready queue",
@@ -249,20 +257,25 @@ static int rr(struct process* processes, int n, int tcs, int tslice)
 #undef PRINT_EVENT
     deque_destroy(q);
     pq_destroy(ioq);
-    return time;
+    stats->time = time;
+    // turnaround time = wait time + burst time + overhead
+    stats->wait = stats->turnaround - stats->burst - tcs * stats->switches;
+    return stats;
 }
-void sim_fcfs(struct process* processes, int n, int tcs)
+struct stats* sim_fcfs(struct process* processes, int n, int tcs)
 {
     puts("time 0ms: Simulator started for FCFS [Q: empty]");
-    int time = rr(processes, n, tcs, INT_MAX);
-    printf("time %dms: Simulator ended for FCFS [Q: empty]\n", time);
+    struct stats* stats = rr(processes, n, tcs, INT_MAX);
+    printf("time %dms: Simulator ended for FCFS [Q: empty]\n", stats->time);
+    return stats;
 }
-void sim_rr(struct process* processes, int n, int tcs, int tslice)
+struct stats* sim_rr(struct process* processes, int n, int tcs, int tslice)
 {
     printf("time 0ms: Simulator started for RR with time slice %dms [Q: empty"
            "]\n", tslice);
-    int time = rr(processes, n, tcs, tslice);
-    printf("time %dms: Simulator ended for RR [Q: empty]\n", time);
+    struct stats* stats = rr(processes, n, tcs, tslice);
+    printf("time %dms: Simulator ended for RR [Q: empty]\n", stats->time);
+    return stats;
 }
 
 // Although this and the previous algorithm have many similarities, there
@@ -272,8 +285,9 @@ void sim_rr(struct process* processes, int n, int tcs, int tslice)
 // requires management of tau values and keys. Also, there are three possible
 // places for preemption as opposed to one in RR. Print statements also require
 // tau values.
-static int srt(struct process* processes, int n, int tcs, int preempt)
+static struct stats* srt(struct process* processes, int n, int tcs, int preempt)
 {
+    struct stats* stats = calloc(1, sizeof(struct stats));
     int time = processes[0].arrival;
     // Current CPU state.
     enum state state = WAITING;
@@ -324,6 +338,8 @@ static int srt(struct process* processes, int n, int tcs, int preempt)
             // Check for CPU-burst completion.
             if(time - cpu_time == current_burst->cpu_left)
             {
+                ++stats->bursts;
+                stats->burst += current_burst->cpu;
                 current_burst->cpu_left = 0;
                 switch_time = time;
                 if(running->bursts_done < running->num_bursts - 1)
@@ -364,6 +380,7 @@ static int srt(struct process* processes, int n, int tcs, int preempt)
         case PREEMPTED:
             if(time - switch_time == tcs >> 1)
             {
+                ++stats->preemptions;
                 struct burst* b = &running->bursts[running->bursts_done];
                 READY_PROCESS(running, running->tau - b->cpu + b->cpu_left);
                 state = WAITING;
@@ -373,6 +390,7 @@ static int srt(struct process* processes, int n, int tcs, int preempt)
         case SWITCHING_OUT:
             if(time - switch_time == tcs >> 1)
             {
+                stats->turnaround += time;
                 // Make sure process has not terminated.
                 if(running->bursts_done < running->num_bursts - 1)
                 {
@@ -399,6 +417,7 @@ static int srt(struct process* processes, int n, int tcs, int preempt)
         case SWITCHING_IN:
             if(time - switch_time == tcs >> 1)
             {
+                ++stats->switches;
                 cpu_time = time;
                 struct burst* b = &running->bursts[running->bursts_done];
                 if(!b->cpu_left)
@@ -432,6 +451,7 @@ static int srt(struct process* processes, int n, int tcs, int preempt)
         // IO-burst completions.
         if(!pq_empty(ioq) && floor(pq_find_min(ioq)->key) == time)
         {
+            stats->turnaround -= time;
             struct pq_pair* item = pq_delete_min(ioq);
             struct process* proc = item->data;
             free(item);
@@ -463,6 +483,7 @@ static int srt(struct process* processes, int n, int tcs, int preempt)
         // New process arrivals.
         if(p < n && processes[p].arrival == time)
         {
+            stats->turnaround -= time;
             processes[p].bursts_done = 0;
             processes[p].tau = processes[p].tau_0;
             READY_PROCESS(&processes[p], processes[p].tau);
@@ -494,17 +515,22 @@ static int srt(struct process* processes, int n, int tcs, int preempt)
 #undef PRINT_EVENT
     pq_destroy(q);
     pq_destroy(ioq);
-    return time;
+    stats->time = time;
+    // turnaround time = wait time + burst time + overhead
+    stats->wait = stats->turnaround - stats->burst - tcs * stats->switches;
+    return stats;
 }
-void sim_sjf(struct process* processes, int n, int tcs)
+struct stats* sim_sjf(struct process* processes, int n, int tcs)
 {
     puts("time 0ms: Simulator started for SJF [Q: empty]");
-    int time = srt(processes, n, tcs, 0);
-    printf("time %dms: Simulator ended for SJF [Q: empty]\n", time);
+    struct stats* stats = srt(processes, n, tcs, 0);
+    printf("time %dms: Simulator ended for SJF [Q: empty]\n", stats->time);
+    return stats;
 }
-void sim_srt(struct process* processes, int n, int tcs)
+struct stats* sim_srt(struct process* processes, int n, int tcs)
 {
     puts("time 0ms: Simulator started for SRT [Q: empty]");
-    int time = srt(processes, n, tcs, 1);
-    printf("time %dms: Simulator ended for SRT [Q: empty]\n", time);
+    struct stats* stats = srt(processes, n, tcs, 1);
+    printf("time %dms: Simulator ended for SRT [Q: empty]\n", stats->time);
+    return stats;
 }
